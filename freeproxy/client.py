@@ -15,36 +15,39 @@ import os
 import requests
 import datetime
 import random
-
+import time
 from gevent.pool import Pool
-
 from peewee import SqliteDatabase, CharField, DateTimeField, Model, \
     FloatField, IntegrityError, IntegerField
-
 from freeproxy import _headers, _user_agents, _home_dir, _log, fetch_proxies, enable_logging
 
 # database
 db = SqliteDatabase(os.path.join(_home_dir, 'proxy.db'))
 
+
 class Proxy(Model):
     """
-    数据库model
+    Database Model
     """
-    proxy = CharField(primary_key=True)  # ip:port
-    check_time = DateTimeField(null=True)  # 测试时间
-    response_time = FloatField(null=True)  # 响应时间
-    status_code = IntegerField(null=True)  # 返回状态码
+    proxy = CharField(primary_key=True)  # "ip:port"
+    check_time = DateTimeField(null=True)  # time of testing
+    response_time = FloatField(null=True)  # response time
+    status_code = IntegerField(null=True)  # status code
 
     class Meta:
         database = db
 
 
+def init_db():
+    db.create_table(Proxy, safe=True)
+
+
 def store_in_db(proxy, escaped=None, status_code=None):
     """
-    将测试过的proxy的信息存入数据库
-    :param proxy:  port:ip
-    :param escaped:  响应时间
-    :param status_code: 返回码，为空则表示访问失败，proxy不可用
+    Store tested proxies in database
+    :param proxy:  "ip:port"
+    :param escaped:  response time
+    :param status_code: status code. None if the testing URL is unreachable.
     """
     proxy = proxy.strip()
     try:
@@ -60,15 +63,14 @@ def store_in_db(proxy, escaped=None, status_code=None):
 
 def test_proxies(proxies, timeout=10, single_url=None, many_urls=None, call_back=None):
     """
-    测试代理。剔除响应时间大于timeout的代理
+    Test proxies, or process html source using callback in the meantime.
 
-    或者在测试的同时进行数据处理 200则调用 call_back(url,source)
     :type proxies: list
-    :param proxies:  代理列表
-    :param timeout: 响应时间(s)
-    :param single_url: 用作测试的url
-    :param many_urls: 用作测试的url列表，测试时从中随机选取一个
-    :param call_back: 处理测试url对应网页的源码,callback(url,source)
+    :param proxies:  proxies
+    :param timeout: response timeout
+    :param single_url: The URL for testing
+    :param many_urls: The list of URLs for testing. Pick one of them when perform request.
+    :param call_back: Process the html source if status code is 200. callback(url, source)
     :return:
     """
 
@@ -80,6 +82,7 @@ def test_proxies(proxies, timeout=10, single_url=None, many_urls=None, call_back
         code = None
         url = random.choice(many_urls) if many_urls is not None else single_url
 
+        start_time = time.time()
         try:
             with gevent.Timeout(seconds=timeout, exception=Exception('[Connection Timeout]')):
                 _headers['User-Agent'] = random.choice(_user_agents)
@@ -105,7 +108,10 @@ def test_proxies(proxies, timeout=10, single_url=None, many_urls=None, call_back
             # log(e.args)
             errors.add(proxy)
 
-        store_in_db(proxy, status_code=code)  # 存
+        end_time = time.time()
+        escaped = end_time - start_time if code else None
+
+        store_in_db(proxy, escaped=escaped, status_code=code)  # store in db
 
     for proxy in proxies:
         pool.spawn(test, proxy)
@@ -118,7 +124,7 @@ def test_proxies(proxies, timeout=10, single_url=None, many_urls=None, call_back
 
 
 def test_instore(url):
-    query = Proxy.select().where(~(Proxy.status_code >> None))
+    query = Proxy.select()
     proxies = [proxy.proxy for proxy in query]
     return test_proxies(proxies, single_url=url)
 
@@ -130,7 +136,7 @@ def main():
     class DefaultParser(argparse.ArgumentParser):
         def error(self, message):
             sys.stderr.write('error: %s\n\n' % message)
-            self.print_help()
+            self.print_help()  # print help
             sys.exit(2)
 
     parser = DefaultParser(description='Get http proxies from some free proxy sites')
@@ -152,7 +158,7 @@ def main():
     if args.test:
         proxies = test_instore(args.url)
     else:
-        db.create_table(Proxy, safe=True)
+        init_db()
         proxies = test_proxies(fetch_proxies(), single_url=args.url)
 
     _log('Proxies amount: {:d}'.format(len(proxies)))

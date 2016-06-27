@@ -19,14 +19,14 @@ from freeproxy import _headers, _user_agents, _log
 
 def _safe_http(url, data=None, session=None, proxies=None, timeout=10, want_obj=False):
     """
-    发起http请求，返回源码。失败则返回空串''。
+    Get the HTML source at url.
     :param url: url
-    :param data: post的data
-    :param session: 使用该session 对象发起请求
-    :param proxies: requests 代理
-    :param timeout: 默认设置10超时。
-    :param want_obj: 是否返回response object，默认为False。True则返回 response_obj,而不是源码
-    :return: 源码或response obj。超时或其它异常则返回空串''，或None(want_obj=True)
+    :param data: data of POST as dict
+    :param session: send http requests in the session
+    :param proxies: send http requests using proxies
+    :param timeout: response timeout, default is 10s
+    :param want_obj: return a response object instead of HTML source or not. Default is False.
+    :return: The HTML source or response obj. If timeout or encounter exception, return '' or None(want_obj is set True).
     """
     try:
         _headers['User-Agent'] = random.choice(_user_agents)
@@ -87,6 +87,9 @@ def from_pachong_org():
 
         for tr in table.find_all('tr'):
             data = tr.find_all('td')
+            if len(data) != 7:
+                continue
+
             ip = data[1].text
 
             if not re.match('\d+\.\d+\.\d+\.\d+', ip):
@@ -332,7 +335,7 @@ def from_get_proxy():
 
 def fetch_proxies():
     """
-    从上面的网站爬取最新的代理ip
+    Get latest proxies from above sites.
     """
     functions = [
         from_cn_proxy,
@@ -340,7 +343,7 @@ def fetch_proxies():
         from_hide_my_ip, from_cyber_syndrome,
         from_free_proxy_list, from_gather_proxy,
         from_get_proxy,
-        # from_pachong_org,
+        from_pachong_org,
     ]
 
     proxies = []

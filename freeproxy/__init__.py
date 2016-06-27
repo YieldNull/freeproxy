@@ -15,8 +15,7 @@ _headers = {
     'Connection': 'keep-alive',
     'Cache-Control': 'max-age=0',
     'Upgrade-Insecure-Requests': '1',
-    'Accept': 'text / html, application / xhtml + xml, application / xml;'
-              'q = 0.9, image / webp, * / *;q = 0.8',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
                   'Ubuntu Chromium/48.0.2564.116 Chrome/48.0.2564.116 Safari/537.36',
     'Accept-Encoding': 'gzip, deflate, sdch',
@@ -80,3 +79,10 @@ def enable_logging():
 
 from .proxy import from_cn_proxy, from_cyber_syndrome, from_free_proxy_list, from_gather_proxy, from_get_proxy, \
     from_hide_my_ip, from_pachong_org, from_proxy_spy, from_xici_daili, fetch_proxies
+
+from client import Proxy, test_proxies, init_db
+
+
+def read_proxies():
+    query = Proxy.select().where(Proxy.status_code == 200)
+    return [p.proxy for p in query]

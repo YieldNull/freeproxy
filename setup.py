@@ -1,3 +1,26 @@
+"""
+Usage
+``````
+.. code:: python
+
+
+    usage: freeproxy [-h] [-l] [-t] URL
+
+    Get http proxies from some free proxy sites
+
+    positional arguments:
+      URL         The url for testing proxies. Like "https://www.google.com"
+
+    optional arguments:
+      -h, --help  show this help message and exit
+      -l          Logging debug messages to a file
+      -t          Test availability of proxies stored in db
+
+Links
+`````````
+* `website <https://github.com/YieldNull/freeproxy>`_
+"""
+
 from setuptools import setup
 from os import path
 
@@ -6,11 +29,11 @@ here = path.abspath(path.dirname(__file__))
 setup(
     name='freeproxy',
 
-    # See https://packaging.python.org/en/latest/single_source_version.html
-    version='1.0.0a1',
+    # See https://packaging.python.org/en/latest/distributing/#choosing-a-versioning-scheme
+    version='1.0.1',
 
     description='Get http proxies from some free proxy sites',
-    long_description='Get http proxies from some free proxy sites',
+    long_description=__doc__,
 
     url='https://github.com/yieldnull/freeproxy',
     author='YieldNull',
@@ -20,8 +43,6 @@ setup(
 
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-        'Development Status :: 3 - Alpha',
-
         'Intended Audience :: Developers',
 
         'License :: OSI Approved :: MIT License',
