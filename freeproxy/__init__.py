@@ -80,7 +80,7 @@ def enable_logging():
 from .proxy import from_cn_proxy, from_cyber_syndrome, from_free_proxy_list, from_gather_proxy, from_get_proxy, \
     from_hide_my_ip, from_pachong_org, from_proxy_spy, from_xici_daili, fetch_proxies
 
-from client import Proxy, test_proxies, init_db
+from .client import Proxy, test_proxies, init_db
 
 
 def read_proxies():
