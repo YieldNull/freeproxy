@@ -30,7 +30,7 @@ setup(
     name='freeproxy',
 
     # See https://packaging.python.org/en/latest/distributing/#choosing-a-versioning-scheme
-    version='1.0.1',
+    version='1.0.2',
 
     description='Get http proxies from some free proxy sites',
     long_description=__doc__,
